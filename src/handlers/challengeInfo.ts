@@ -1,3 +1,4 @@
+// Handles /challenge-info by showing challenge details, prompt metadata, and submission count.
 import type { ChatInputCommandInteraction } from "discord.js";
 import { getChallenge } from "../db/challenges.js";
 import { getSubmissionCount } from "../db/submissions.js";

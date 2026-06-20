@@ -1,3 +1,4 @@
+// Handles /submit-message by fetching a user's code-block message by Discord message ID.
 import type { ChatInputCommandInteraction } from "discord.js";
 import { getChallenge } from "../db/challenges.js";
 import {

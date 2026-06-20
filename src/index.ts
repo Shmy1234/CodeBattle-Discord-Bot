@@ -1,3 +1,4 @@
+// Bot entrypoint: starts the Discord client and routes slash command interactions.
 import { Client, Events, GatewayIntentBits } from "discord.js";
 import { config } from "./config.js";
 import { handleCommand } from "./handlers/router.js";

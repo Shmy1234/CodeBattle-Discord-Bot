@@ -1,3 +1,4 @@
+// Handles /submit for direct text/code answers entered into the slash command.
 import type { ChatInputCommandInteraction } from "discord.js";
 import { getChallenge } from "../db/challenges.js";
 import { addSubmission, hasUserSubmitted } from "../db/submissions.js";

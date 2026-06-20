@@ -1,3 +1,4 @@
+// Routes Discord slash command names to their command-specific handlers.
 import type { ChatInputCommandInteraction } from "discord.js";
 import { handleActive } from "./active.js";
 import { handleChallenge } from "./challenge.js";

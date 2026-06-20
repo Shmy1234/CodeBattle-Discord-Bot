@@ -1,3 +1,4 @@
+// Shared application types that map Discord and Supabase data into bot-friendly shapes.
 import type { Difficulty } from "./problems.js";
 
 export type ChallengeStatus = "active" | "submitted" | "completed" | "cancelled";

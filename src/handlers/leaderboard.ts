@@ -1,3 +1,4 @@
+// Handles /leaderboard for server-specific score rankings.
 import type { ChatInputCommandInteraction } from "discord.js";
 import { getLeaderboard } from "../db/scores.js";
 

@@ -1,3 +1,4 @@
+// Handles /challenge: validates the request, picks a problem, and stores the challenge.
 import type { ChatInputCommandInteraction } from "discord.js";
 import { createChallenge } from "../db/challenges.js";
 import { formatProblemDetails } from "../problemDetails.js";

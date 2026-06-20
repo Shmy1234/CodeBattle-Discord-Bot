@@ -1,3 +1,4 @@
+// Supabase queries for creating, reading, and updating challenge records.
 import { supabase } from "../supabase.js";
 import { isDifficulty } from "../problems.js";
 import type { Challenge, ChallengeRow, ChallengeStatus } from "../types.js";

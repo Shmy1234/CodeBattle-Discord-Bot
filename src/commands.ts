@@ -1,3 +1,4 @@
+// Discord slash command definitions. Run npm run register after changing this file.
 import { SlashCommandBuilder } from "discord.js";
 import { topics } from "./topics.js";
 

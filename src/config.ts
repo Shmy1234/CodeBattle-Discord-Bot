@@ -1,3 +1,4 @@
+// Centralized environment validation so startup fails fast when secrets are missing.
 import "dotenv/config";
 
 function readRequiredEnv(name: string): string {

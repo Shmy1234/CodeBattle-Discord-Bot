@@ -1,3 +1,4 @@
+// Supabase queries for server-specific leaderboard scores.
 import { supabase } from "../supabase.js";
 import type { ScoreRow } from "../types.js";
 

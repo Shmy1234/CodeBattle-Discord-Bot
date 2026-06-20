@@ -1,3 +1,4 @@
+// Fixed NeetCode-style topic choices used by the /challenge dropdown.
 export const topics = [
   { name: "Arrays & Hashing", value: "arrays-hashing" },
   { name: "Two Pointers", value: "two-pointers" },

@@ -1,3 +1,4 @@
+// Original prompt summaries and examples for the local NeetCode 150 title list.
 export type ProblemDetails = {
   description: string;
   examples: string[];

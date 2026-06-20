@@ -1,3 +1,4 @@
+// Supabase queries for challenge submissions and submission counts.
 import { supabase } from "../supabase.js";
 import { markChallengeSubmitted } from "./challenges.js";
 import type { Challenge, Submission, SubmissionRow } from "../types.js";

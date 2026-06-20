@@ -1,3 +1,4 @@
+// Posts the clean two-solution comparison once both challenge participants submit.
 import type { ChatInputCommandInteraction } from "discord.js";
 import { getChallengeSubmissions } from "../db/submissions.js";
 import type { Challenge } from "../types.js";

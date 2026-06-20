@@ -1,3 +1,4 @@
+// Handles /winner: completes a challenge and awards leaderboard points.
 import type { ChatInputCommandInteraction } from "discord.js";
 import { getChallenge, updateChallengeWinner } from "../db/challenges.js";
 import { addScore } from "../db/scores.js";

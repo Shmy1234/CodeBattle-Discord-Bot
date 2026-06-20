@@ -22,9 +22,12 @@
   },
   "homepage": "https://github.com/Shmy1234/CodeBattle-Discord-Bot#readme",
   "dependencies": {
+    "@langchain/openai": "^1.5.1",
     "@supabase/supabase-js": "^2.108.2",
     "discord.js": "^14.26.4",
-    "dotenv": "^17.4.2"
+    "dotenv": "^17.4.2",
+    "langchain": "^1.5.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^26.0.0",

@@ -1,3 +1,4 @@
+// One-off command registration script for test-server slash commands.
 import { REST, Routes } from "discord.js";
 import { commands } from "./commands.js";
 import { config } from "./config.js";

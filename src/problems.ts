@@ -1,3 +1,4 @@
+// NeetCode 150 title pools grouped by difficulty.
 export const problems = {
   easy: [
     "Contains Duplicate",

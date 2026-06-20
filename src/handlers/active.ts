@@ -1,3 +1,4 @@
+// Handles /active by listing active and submitted challenges for the current server.
 import type { ChatInputCommandInteraction } from "discord.js";
 import { getActiveChallengesForGuild } from "../db/challenges.js";
 
