@@ -1,0 +1,268 @@
+import "dotenv/config";
+import {Client, Events, GatewayIntentBits, REST,Routes, SlashCommandBuilder} from "discord.js";
+
+const token = process.env.DISCORD_TOKEN;
+const clientId = process.env.DISCORD_CLIENT_ID;
+const guildId = process.env.DISCORD_GUILD_ID;
+
+if (!token || !clientId || !guildId) { // Check if required environment variables are missing
+  throw new Error("Missing DISCORD_TOKEN, DISCORD_CLIENT_ID, or DISCORD_GUILD_ID in .env");
+}
+
+const problems = {
+  easy: [
+    "Contains Duplicate",
+    "Valid Anagram",
+    "Two Sum",
+    "Valid Palindrome",
+    "Best Time to Buy and Sell Stock",
+    "Valid Parentheses",
+    "Binary Search",
+    "Reverse Linked List",
+    "Merge Two Sorted Lists",
+    "Linked List Cycle",
+    "Invert Binary Tree",
+    "Maximum Depth of Binary Tree",
+    "Diameter of Binary Tree",
+    "Balanced Binary Tree",
+    "Same Tree",
+    "Subtree of Another Tree",
+    "Lowest Common Ancestor of a Binary Search Tree",
+    "Kth Largest Element in a Stream",
+    "Last Stone Weight",
+    "Climbing Stairs",
+    "Min Cost Climbing Stairs",
+    "Meeting Rooms",
+    "Happy Number",
+    "Plus One",
+    "Single Number",
+    "Number of 1 Bits",
+    "Counting Bits",
+    "Reverse Bits",
+    "Missing Number"
+  ],
+  medium: [
+    "Group Anagrams",
+    "Top K Frequent Elements",
+    "Encode and Decode Strings",
+    "Product of Array Except Self",
+    "Valid Sudoku",
+    "Longest Consecutive Sequence",
+    "Two Sum II Input Array Is Sorted",
+    "3Sum",
+    "Container With Most Water",
+    "Longest Substring Without Repeating Characters",
+    "Longest Repeating Character Replacement",
+    "Permutation in String",
+    "Min Stack",
+    "Evaluate Reverse Polish Notation",
+    "Generate Parentheses",
+    "Daily Temperatures",
+    "Car Fleet",
+    "Search a 2D Matrix",
+    "Koko Eating Bananas",
+    "Find Minimum in Rotated Sorted Array",
+    "Search in Rotated Sorted Array",
+    "Time Based Key-Value Store",
+    "Reorder List",
+    "Remove Nth Node From End of List",
+    "Copy List with Random Pointer",
+    "Add Two Numbers",
+    "Find the Duplicate Number",
+    "LRU Cache",
+    "Binary Tree Level Order Traversal",
+    "Binary Tree Right Side View",
+    "Count Good Nodes in Binary Tree",
+    "Validate Binary Search Tree",
+    "Kth Smallest Element in a BST",
+    "Construct Binary Tree from Preorder and Inorder Traversal",
+    "Implement Trie Prefix Tree",
+    "Design Add and Search Words Data Structure",
+    "K Closest Points to Origin",
+    "Kth Largest Element in an Array",
+    "Task Scheduler",
+    "Design Twitter",
+    "Subsets",
+    "Combination Sum",
+    "Permutations",
+    "Subsets II",
+    "Combination Sum II",
+    "Word Search",
+    "Palindrome Partitioning",
+    "Letter Combinations of a Phone Number",
+    "Number of Islands",
+    "Clone Graph",
+    "Max Area of Island",
+    "Pacific Atlantic Water Flow",
+    "Surrounded Regions",
+    "Rotting Oranges",
+    "Walls and Gates",
+    "Course Schedule",
+    "Course Schedule II",
+    "Redundant Connection",
+    "Number of Connected Components in an Undirected Graph",
+    "Graph Valid Tree",
+    "Min Cost to Connect All Points",
+    "Network Delay Time",
+    "Cheapest Flights Within K Stops",
+    "House Robber",
+    "House Robber II",
+    "Longest Palindromic Substring",
+    "Palindromic Substrings",
+    "Decode Ways",
+    "Coin Change",
+    "Maximum Product Subarray",
+    "Word Break",
+    "Longest Increasing Subsequence",
+    "Partition Equal Subset Sum",
+    "Unique Paths",
+    "Longest Common Subsequence",
+    "Best Time to Buy and Sell Stock with Cooldown",
+    "Coin Change II",
+    "Target Sum",
+    "Interleaving String",
+    "Edit Distance",
+    "Maximum Subarray",
+    "Jump Game",
+    "Jump Game II",
+    "Gas Station",
+    "Hand of Straights",
+    "Merge Triplets to Form Target Triplet",
+    "Partition Labels",
+    "Valid Parenthesis String",
+    "Insert Interval",
+    "Merge Intervals",
+    "Non-overlapping Intervals",
+    "Meeting Rooms II",
+    "Rotate Image",
+    "Spiral Matrix",
+    "Set Matrix Zeroes",
+    "Pow(x, n)",
+    "Multiply Strings",
+    "Detect Squares",
+    "Sum of Two Integers",
+    "Reverse Integer"
+  ],
+  hard: [
+    "Trapping Rain Water",
+    "Minimum Window Substring",
+    "Sliding Window Maximum",
+    "Largest Rectangle in Histogram",
+    "Median of Two Sorted Arrays",
+    "Merge K Sorted Lists",
+    "Reverse Nodes in K-Group",
+    "Binary Tree Maximum Path Sum",
+    "Serialize and Deserialize Binary Tree",
+    "Word Search II",
+    "Find Median from Data Stream",
+    "N-Queens",
+    "Word Ladder",
+    "Reconstruct Itinerary",
+    "Swim in Rising Water",
+    "Alien Dictionary",
+    "Longest Increasing Path in a Matrix",
+    "Distinct Subsequences",
+    "Burst Balloons",
+    "Regular Expression Matching",
+    "Minimum Interval to Include Each Query"
+  ]
+} as const;
+
+type Difficulty = keyof typeof problems;
+
+function isDifficulty(value: string | null): value is Difficulty {
+  return value === "easy" || value === "medium" || value === "hard";
+}
+
+function pickProblem(difficulty: Difficulty): string {
+  const problemList = problems[difficulty];
+  const randomIndex = Math.floor(Math.random() * problemList.length);
+
+  return problemList[randomIndex] ?? problemList[0];
+}
+
+const commands = [ // Define slash commands
+  new SlashCommandBuilder()
+    .setName("ping")
+    .setDescription("Check if the bot is online")
+    .toJSON(),
+    
+  new SlashCommandBuilder()
+    .setName("challenge")
+    .setDescription("Challenge another user to a coding problem")
+    .addUserOption((option) =>
+      option
+        .setName("user")
+        .setDescription("The user you want to challenge")
+        .setRequired(true)
+    )
+    .addStringOption((option) =>
+      option
+        .setName("difficulty")
+        .setDescription("Choose the difficulty")
+        .setRequired(true)
+        .addChoices(
+          { name: "Easy", value: "easy" },
+          { name: "Medium", value: "medium" },
+          { name: "Hard", value: "hard" }
+        )
+    )
+    .addStringOption((option) =>
+      option
+        .setName("topic")
+        .setDescription("The coding topic, like arrays or strings")
+        .setRequired(true)
+    )
+    .toJSON()
+];
+
+const rest = new REST({ version: "10" }).setToken(token); // Create REST client and set token for discord API
+
+// Register slash commands with Discord API for the specified guild
+await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
+  body: commands
+});
+
+console.log("Registered slash commands.");
+
+const client = new Client({
+  intents: [GatewayIntentBits.Guilds]
+});
+
+// Log a message when the client is ready and logged in
+client.once(Events.ClientReady, (readyClient) => {
+  console.log("Logged in as " + readyClient.user.tag);
+});
+
+// Listen for interaction events and respond to the "ping" command
+client.on(Events.InteractionCreate, async (interaction) => {
+  if (!interaction.isChatInputCommand()) {
+    return;
+  }
+
+  if (interaction.commandName === "ping") {
+    await interaction.reply("Pong!!! CodeBattle bot is online.");
+  }
+
+  if (interaction.commandName === "challenge") {
+    const opponent = interaction.options.getUser("user");
+    const difficulty = interaction.options.getString("difficulty");
+    const topic = interaction.options.getString("topic");
+
+    if (!isDifficulty(difficulty)) {
+      await interaction.reply("Please choose a valid difficulty: easy, medium, or hard.");
+      return;
+    }
+
+    const problem = pickProblem(difficulty);
+
+    await interaction.reply(
+      `${interaction.user} challenged ${opponent}!\n` +
+      `Difficulty: ${difficulty}\n` +
+      `Topic: ${topic}\n\n` +
+      `Problem: ${problem}`
+    );
+  }
+});
+
+await client.login(token);
