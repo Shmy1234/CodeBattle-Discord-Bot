@@ -6,6 +6,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx src/index.ts",
+    "register": "tsx src/registerCommands.ts",
     "build": "tsc",
     "start": "node dist/index.js"
   },
@@ -21,6 +22,7 @@
   },
   "homepage": "https://github.com/Shmy1234/CodeBattle-Discord-Bot#readme",
   "dependencies": {
+    "@supabase/supabase-js": "^2.108.2",
     "discord.js": "^14.26.4",
     "dotenv": "^17.4.2"
   },
