@@ -11,7 +11,7 @@ export async function handleLeaderboard(interaction: ChatInputCommandInteraction
   const leaderboard = await getLeaderboard(interaction.guildId);
 
   if (leaderboard.length === 0) {
-    await interaction.reply("No winners yet. Use /winner after a challenge is complete.");
+    await interaction.reply("No CodeBattle AI verdicts yet. Complete a challenge with two submissions to create one.");
     return;
   }
 

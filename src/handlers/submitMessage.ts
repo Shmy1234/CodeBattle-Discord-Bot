@@ -5,6 +5,7 @@ import {
   addSubmission,
   hasUserSubmitted
 } from "../db/submissions.js";
+import { parseCodeSubmission } from "../evaluation/codeFence.js";
 import { replyWithSubmissionResult } from "./submissionComparison.js";
 
 export async function handleSubmitMessage(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -29,6 +30,16 @@ export async function handleSubmitMessage(interaction: ChatInputCommandInteracti
 
   if (challenge.status === "cancelled") {
     await interaction.reply(`${challenge.id} has been cancelled.`);
+    return;
+  }
+
+  if (challenge.status === "evaluating") {
+    await interaction.reply(`${challenge.id} is already being evaluated by CodeBattle AI.`);
+    return;
+  }
+
+  if (challenge.status === "evaluation_failed") {
+    await interaction.reply(`${challenge.id} has a failed evaluation. The challenge creator can retry with /evaluate.`);
     return;
   }
 
@@ -58,16 +69,19 @@ export async function handleSubmitMessage(interaction: ChatInputCommandInteracti
     return;
   }
 
-  const answer = message.content.trim();
+  const submission = parseCodeSubmission(message.content);
 
-  if (!answer) {
-    await interaction.reply("That message has no readable text content for me to submit.");
+  if (!submission) {
+    await interaction.reply("That message must contain exactly one fenced `js` or `ts` code block.");
     return;
   }
 
+  await interaction.deferReply();
+
   await addSubmission(interaction.guildId, challenge, {
     userId: interaction.user.id,
-    answer,
+    answer: submission.source,
+    language: submission.language,
     channelId: interaction.channelId,
     messageId
   });

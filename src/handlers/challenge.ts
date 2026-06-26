@@ -1,6 +1,8 @@
 // Handles /challenge: validates the request, picks a problem, and stores the challenge.
 import type { ChatInputCommandInteraction } from "discord.js";
 import { createChallenge } from "../db/challenges.js";
+import { codeSubmissionInstruction } from "../evaluation/codeFence.js";
+import { getProblemTestSuite } from "../evaluation/testSuites.js";
 import { formatProblemDetails } from "../problemDetails.js";
 import { isDifficulty, pickProblem } from "../problems.js";
 import { getTopicName, isTopic } from "../topics.js";
@@ -41,6 +43,12 @@ export async function handleChallenge(interaction: ChatInputCommandInteraction):
   }
 
   const problem = pickProblem(difficulty);
+  const testSuite = getProblemTestSuite(problem);
+
+  if (!testSuite) {
+    throw new Error(`No executable test suite is configured for ${problem}.`);
+  }
+
   const problemDetails = formatProblemDetails(problem);
   const challenge = await createChallenge({
     guildId: interaction.guildId,
@@ -61,6 +69,7 @@ export async function handleChallenge(interaction: ChatInputCommandInteraction):
     `Topic: ${getTopicName(topic)}\n\n` +
     `Problem: ${challenge.problem}\n` +
     `${problemDetails}\n\n` +
-    `Submit with: /submit challenge_id:${challenge.id} answer:your solution`
+    `${codeSubmissionInstruction(testSuite.functionName)}\n\n` +
+    `Submit with: /submit challenge_id:${challenge.id} answer:your fenced code block`
   );
 }

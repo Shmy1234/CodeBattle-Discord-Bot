@@ -50,7 +50,7 @@ export async function getActiveChallengesForGuild(guildId: string): Promise<Chal
     .from("challenges")
     .select("*")
     .eq("guild_id", guildId)
-    .in("status", ["active", "submitted"])
+    .in("status", ["active", "submitted", "evaluating", "evaluation_failed"])
     .order("created_at", { ascending: false })
     .limit(10)
     .returns<ChallengeRow[]>();
@@ -62,34 +62,39 @@ export async function getActiveChallengesForGuild(guildId: string): Promise<Chal
   return (data ?? []).map(mapChallenge);
 }
 
-export async function updateChallengeWinner(
+export async function claimChallengeEvaluation(guildId: string, challengeId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("challenges")
+    .update({ status: "evaluating", evaluation_error: null })
+    .eq("guild_id", guildId)
+    .eq("id", challengeId)
+    .in("status", ["active", "submitted", "evaluation_failed"])
+    .select("id");
+
+  if (error) {
+    throw new Error(`Failed to claim challenge evaluation: ${error.message}`);
+  }
+
+  return (data?.length ?? 0) === 1;
+}
+
+export async function markChallengeEvaluationFailed(
   guildId: string,
-  challenge: Challenge,
-  winnerId: string
+  challengeId: string,
+  errorMessage: string
 ): Promise<void> {
   const { error } = await supabase
     .from("challenges")
     .update({
-      status: "completed",
-      winner_id: winnerId
+      status: "evaluation_failed",
+      evaluation_error: errorMessage.slice(0, 500)
     })
     .eq("guild_id", guildId)
-    .eq("id", challenge.id);
+    .eq("id", challengeId)
+    .eq("status", "evaluating");
 
   if (error) {
-    throw new Error(`Failed to update winner: ${error.message}`);
-  }
-}
-
-export async function markChallengeSubmitted(guildId: string, challengeId: string): Promise<void> {
-  const { error } = await supabase
-    .from("challenges")
-    .update({ status: "submitted" })
-    .eq("guild_id", guildId)
-    .eq("id", challengeId);
-
-  if (error) {
-    throw new Error(`Failed to update challenge status: ${error.message}`);
+    throw new Error(`Failed to record evaluation failure: ${error.message}`);
   }
 }
 
@@ -123,6 +128,8 @@ function mapChallenge(row: ChallengeRow): Challenge {
 function isChallengeStatus(value: string): value is ChallengeStatus {
   return value === "active" ||
     value === "submitted" ||
+    value === "evaluating" ||
     value === "completed" ||
-    value === "cancelled";
+    value === "cancelled" ||
+    value === "evaluation_failed";
 }

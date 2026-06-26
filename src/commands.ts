@@ -77,18 +77,12 @@ export const commands = [
     .toJSON(),
 
   new SlashCommandBuilder()
-    .setName("winner")
-    .setDescription("Choose the winner for a completed challenge")
+    .setName("evaluate")
+    .setDescription("Retry a failed CodeBattle AI evaluation")
     .addStringOption((option) =>
       option
         .setName("challenge_id")
         .setDescription("The challenge ID, like CB-1001")
-        .setRequired(true)
-    )
-    .addUserOption((option) =>
-      option
-        .setName("user")
-        .setDescription("The winner of the challenge")
         .setRequired(true)
     )
     .toJSON(),

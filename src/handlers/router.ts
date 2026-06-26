@@ -3,10 +3,10 @@ import type { ChatInputCommandInteraction } from "discord.js";
 import { handleActive } from "./active.js";
 import { handleChallenge } from "./challenge.js";
 import { handleChallengeInfo } from "./challengeInfo.js";
+import { handleEvaluate } from "./evaluate.js";
 import { handleLeaderboard } from "./leaderboard.js";
 import { handleSubmit } from "./submit.js";
 import { handleSubmitMessage } from "./submitMessage.js";
-import { handleWinner } from "./winner.js";
 
 export async function handleCommand(interaction: ChatInputCommandInteraction): Promise<void> {
   switch (interaction.commandName) {
@@ -30,8 +30,8 @@ export async function handleCommand(interaction: ChatInputCommandInteraction): P
       await handleLeaderboard(interaction);
       return;
 
-    case "winner":
-      await handleWinner(interaction);
+    case "evaluate":
+      await handleEvaluate(interaction);
       return;
 
     case "active":

@@ -1,4 +1,5 @@
 // NeetCode 150 title pools grouped by difficulty.
+import { getTestSuitesForDifficulty } from "./evaluation/testSuites.js";
 export const problems = {
   easy: [
     "Contains Duplicate",
@@ -165,8 +166,18 @@ export function isDifficulty(value: string | null): value is Difficulty {
 }
 
 export function pickProblem(difficulty: Difficulty): string {
-  const problemList = problems[difficulty];
-  const randomIndex = Math.floor(Math.random() * problemList.length);
+  const problemList = getTestSuitesForDifficulty(difficulty).map((suite) => suite.problem);
 
-  return problemList[randomIndex] ?? problemList[0];
+  if (problemList.length === 0) {
+    throw new Error(`No executable test suites are configured for ${difficulty} challenges.`);
+  }
+
+  const randomIndex = Math.floor(Math.random() * problemList.length);
+  const pickedProblem = problemList[randomIndex];
+
+  if (!pickedProblem) {
+    throw new Error(`Could not select an executable ${difficulty} challenge.`);
+  }
+
+  return pickedProblem;
 }

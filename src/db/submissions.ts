@@ -1,6 +1,5 @@
 // Supabase queries for challenge submissions and submission counts.
 import { supabase } from "../supabase.js";
-import { markChallengeSubmitted } from "./challenges.js";
 import type { Challenge, Submission, SubmissionRow } from "../types.js";
 
 export async function addSubmission(
@@ -13,6 +12,7 @@ export async function addSubmission(
     guild_id: guildId,
     user_id: submission.userId,
     answer: submission.answer,
+    language: submission.language,
     channel_id: submission.channelId,
     message_id: submission.messageId
   });
@@ -20,8 +20,6 @@ export async function addSubmission(
   if (insertError) {
     throw new Error(`Failed to save submission: ${insertError.message}`);
   }
-
-  await markChallengeSubmitted(guildId, challenge.id);
 }
 
 export async function hasUserSubmitted(
@@ -49,7 +47,7 @@ export async function getChallengeSubmissions(
 ): Promise<SubmissionRow[]> {
   const { data, error } = await supabase
     .from("submissions")
-    .select("user_id, answer, channel_id, message_id, submitted_at")
+    .select("user_id, answer, language, channel_id, message_id, submitted_at")
     .eq("guild_id", guildId)
     .eq("challenge_id", challengeId)
     .order("submitted_at", { ascending: true })

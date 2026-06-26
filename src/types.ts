@@ -1,15 +1,24 @@
 // Shared application types that map Discord and Supabase data into bot-friendly shapes.
 import type { Difficulty } from "./problems.js";
 
-export type ChallengeStatus = "active" | "submitted" | "completed" | "cancelled";
+export type ChallengeStatus =
+  | "active"
+  | "submitted"
+  | "evaluating"
+  | "completed"
+  | "cancelled"
+  | "evaluation_failed";
 
 export type Submission = {
   userId: string;
   answer: string;
   submittedAt: Date;
+  language: SubmissionLanguage;
   channelId?: string;
   messageId?: string;
 };
+
+export type SubmissionLanguage = "javascript" | "typescript";
 
 export type Challenge = {
   id: string;
@@ -45,6 +54,7 @@ export type ScoreRow = {
 export type SubmissionRow = {
   user_id: string;
   answer: string;
+  language: SubmissionLanguage;
   channel_id: string | null;
   message_id: string | null;
   submitted_at: string;
