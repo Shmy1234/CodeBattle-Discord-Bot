@@ -1,34 +1,34 @@
-# CodeBattle Discord Bot
+# CodeBattle
 
-CodeBattle runs server-scoped, two-player programming challenges in Discord.
-The current AI workflow accepts JavaScript/TypeScript code blocks, executes them
-in E2B's isolated no-network sandbox against repository-owned tests, asks
-OpenRouter's `openai/gpt-oss-120b:free` model for structured feedback through
-LangChain.js, and automatically awards the
-winner one leaderboard point.
+CodeBattle is a Discord-native bot for head-to-head programming challenges. It gives two server members the same problem, evaluates both solutions, chooses a winner, and maintains a leaderboard for that server.
 
-## Setup
+The entire experience stays inside Discord. Challenges are created with slash commands, solutions are submitted from Discord messages, and results are returned as a detailed CodeBattle AI verdict.
 
-1. Install dependencies with `npm install`.
-2. Copy `.env.example` to `.env` and provide Discord, Supabase, OpenRouter, and
-   E2B credentials. `OPEN_ROUTER_EVALUATION_MODEL` defaults to
-   `openai/gpt-oss-120b:free`.
-3. Apply [supabase/schema.sql](./supabase/schema.sql) to the target Supabase
-   project. It creates the evaluation tables and atomic finalization function.
-4. Build the managed Node 22 sandbox template once with:
+## How a CodeBattle works
 
-   ```bash
-   npm run build:sandbox-template
-   ```
+1. A member runs `/challenge` and chooses another member, a difficulty, and a topic.
+2. CodeBattle selects a supported problem and posts its description, examples, required function name, and Challenge ID.
+3. Each participant posts one JavaScript or TypeScript code block and submits its message ID or link with `/submit`.
+4. After both submissions arrive, CodeBattle runs each solution against public and hidden tests in a separate isolated sandbox.
+5. CodeBattle AI reviews the code, compares both results, posts a verdict, and awards the winner one point.
 
-   The command uses `E2B_API_KEY` and the name in `E2B_SANDBOX_TEMPLATE`.
-5. Register slash commands with `npm run register`.
-6. Start the bot with `npm run dev`.
+Only the two participants can submit to a Challenge, and each participant can submit only once.
 
-## Submission contract
+## Commands
 
-Post one code block tagged `js` or `ts` as a normal Discord message. The
-function name is specified when the bot creates the challenge. For example:
+| Command | What it does |
+| --- | --- |
+| `/ping` | Confirms that CodeBattle is online. |
+| `/challenge` | Creates a two-person Challenge with a difficulty and topic. |
+| `/submit` | Submits a Discord message containing one fenced `js` or `ts` code block. |
+| `/active` | Lists up to ten unfinished Challenges in the current server. |
+| `/challenge-info` | Shows a Challenge's participants, problem, status, submission count, and winner. |
+| `/leaderboard` | Shows the top ten scores for the current server. |
+| `/evaluate` | Lets the Challenge creator retry an evaluation that failed. |
+
+## Submission format
+
+A Submission must be a normal Discord message containing exactly one fenced JavaScript or TypeScript code block and no additional text.
 
 ```ts
 export function containsDuplicate(nums: number[]): boolean {
@@ -36,30 +36,100 @@ export function containsDuplicate(nums: number[]): boolean {
 }
 ```
 
-Then run `/submit` with the Challenge ID and either the message's ID (when it
-is in the current channel) or its full Discord message link. The bot only
-accepts a message written by the submitting Challenge participant, from the
-same Discord server, with no text outside its one fenced code block.
+The exported function name must match the function named in the Challenge announcement. `/submit` accepts either the message ID from the current channel or a full Discord message link from the same server.
 
-Enable **Message Content Intent** in the Discord Developer Portal's Bot page.
-The bot also needs **View Channel** and **Read Message History** permission in
-every channel from which users can submit code.
+CodeBattle verifies that the message belongs to the server, was written by the participant submitting it, and contains a supported language tag before storing the source.
 
-The bot currently provides executable public and hidden test suites for:
+## Features and implementation
 
-- Easy: Contains Duplicate, Valid Anagram, Two Sum
-- Medium: Product of Array Except Self, Valid Sudoku
-- Hard: Trapping Rain Water, Minimum Window Substring, Sliding Window Maximum
+### Two-player Challenges
 
-The problem picker limits AI-evaluated challenges to this supported set. Add a
-versioned test suite before enabling another problem.
+`/challenge` rejects bots, self-Challenges, invalid difficulties, and invalid topics. It creates a `CB-...` identifier and stores the participants, selected problem, metadata, and lifecycle state in Supabase.
 
-## Safety and scoring
+Problems come from a local NeetCode-style catalogue. The bot currently chooses randomly from the executable test suites available for the selected difficulty.
 
-- User code never runs in the bot process.
-- Each Submission runs in a separate E2B sandbox with outbound internet disabled.
-- The sandbox returns test results, median execution time, and peak memory.
-- Winner selection compares passed tests, estimated time complexity, measured
-  runtime, memory, code quality, then earliest submission as the final tie-breaker.
-- If execution, structured model output, or finalization fails, no points are
-  awarded. The challenge creator can use `/evaluate` to retry.
+### Detailed problem prompts
+
+Each Challenge announcement includes local problem details, examples, constraints, and the required function name. Prompts are repository-owned, so the judging contract does not depend on content generated at evaluation time.
+
+### Message-based Submissions
+
+Participants submit code by referencing an existing Discord message. The Discord handler validates the user and message, while the database layer enforces one Submission per user and Challenge.
+
+Only JavaScript and TypeScript are accepted. The parser requires one fenced `js` or `ts` block and rejects unsupported languages, extra prose, missing tags, and malformed message references.
+
+### Isolated code execution
+
+Each Submission runs in its own E2B Node.js sandbox. Internet access is disabled, memory and execution time are limited, and the sandbox is terminated after every run.
+
+The evaluator compiles JavaScript or TypeScript, loads the required function, and runs versioned public and hidden test cases. It records passed tests, median runtime, peak memory, and failed case identifiers.
+
+User code never runs inside the Discord bot process.
+
+### CodeBattle AI evaluation
+
+After sandbox execution, LangChain sends the problem, source code, and measured results to an OpenRouter-hosted model. Zod validates the structured response before it is saved or shown in Discord.
+
+The AI estimates time and space complexity, assigns a code-quality score, and produces concise feedback. Sandbox results remain the source of truth for observed behavior; complexity is clearly treated as an estimate.
+
+### Deterministic winner selection
+
+CodeBattle compares the two Evaluations in this order:
+
+1. Number of canonical tests passed
+2. Estimated time complexity
+3. Median sandbox runtime
+4. Peak sandbox memory
+5. AI code-quality score
+6. Earlier Submission time as the final tie-breaker
+
+The winner receives one leaderboard point. Supabase finalizes the Challenge, records the Verdict, and increments the score in one database function so a completed Challenge cannot award points twice.
+
+### Server-scoped data
+
+Challenges, Submissions, Evaluations, Verdicts, and scores are stored in Supabase. Every operation is scoped by Discord server ID, keeping each community's Challenges and leaderboard separate.
+
+Raw Supabase queries live in `src/db/`. Discord handlers validate input and coordinate the workflow without directly accessing the database.
+
+### Failure recovery
+
+If sandbox execution, AI output validation, or finalization fails, the Challenge moves to `evaluation_failed` and no point is awarded. The member who created it can retry safely with `/evaluate`.
+
+## Supported problems
+
+CodeBattle currently evaluates these repository-tested problems:
+
+| Difficulty | Problems |
+| --- | --- |
+| Easy | Contains Duplicate, Valid Anagram, Two Sum |
+| Medium | Product of Array Except Self, Valid Sudoku |
+| Hard | Trapping Rain Water, Minimum Window Substring, Sliding Window Maximum |
+
+The broader local catalogue is not used for live Challenges until a versioned executable test suite is added for each problem.
+
+## Architecture
+
+```text
+Discord interaction
+        ↓
+Command router and focused handler
+        ↓
+Guild-scoped Supabase data
+        ↓
+E2B sandbox tests
+        ↓
+OpenRouter structured evaluation
+        ↓
+Atomic Verdict and leaderboard update
+```
+
+CodeBattle uses strict TypeScript with NodeNext ESM. `discord.js` handles interactions, Supabase stores state, E2B isolates untrusted code, and LangChain with Zod provides structured OpenRouter evaluation.
+
+## Current limitations
+
+- Topic is collected and displayed, but it does not yet filter problem selection.
+- Only the eight listed problems have executable test suites.
+- Submissions support JavaScript and TypeScript only.
+- Source must come from a Discord message; file attachments are not supported.
+- A cancellation state exists in the data model, but there is no cancellation command.
+- Evaluation currently uses one AI provider and does not perform multi-model consensus.
