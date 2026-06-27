@@ -39,7 +39,7 @@ export const commands = [
 
   new SlashCommandBuilder()
     .setName("submit")
-    .setDescription("Submit an answer for a coding challenge")
+    .setDescription("Submit the code block from a Discord message")
     .addStringOption((option) =>
       option
         .setName("challenge_id")
@@ -48,25 +48,8 @@ export const commands = [
     )
     .addStringOption((option) =>
       option
-        .setName("answer")
-        .setDescription("Your solution or explanation")
-        .setRequired(true)
-    )
-    .toJSON(),
-
-  new SlashCommandBuilder()
-    .setName("submit-message")
-    .setDescription("Submit code from a Discord message ID")
-    .addStringOption((option) =>
-      option
-        .setName("challenge_id")
-        .setDescription("The challenge ID, like CB-1001")
-        .setRequired(true)
-    )
-    .addStringOption((option) =>
-      option
-        .setName("message_id")
-        .setDescription("The ID of your code block message in this channel")
+        .setName("message")
+        .setDescription("Message ID in this channel, or a Discord message link")
         .setRequired(true)
     )
     .toJSON(),

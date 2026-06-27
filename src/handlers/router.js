@@ -4,7 +4,6 @@ import { handleChallengeInfo } from "./challengeInfo.js";
 import { handleEvaluate } from "./evaluate.js";
 import { handleLeaderboard } from "./leaderboard.js";
 import { handleSubmit } from "./submit.js";
-import { handleSubmitMessage } from "./submitMessage.js";
 export async function handleCommand(interaction) {
     switch (interaction.commandName) {
         case "ping":
@@ -15,9 +14,6 @@ export async function handleCommand(interaction) {
             return;
         case "submit":
             await handleSubmit(interaction);
-            return;
-        case "submit-message":
-            await handleSubmitMessage(interaction);
             return;
         case "leaderboard":
             await handleLeaderboard(interaction);

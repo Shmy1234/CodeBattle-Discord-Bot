@@ -56,6 +56,7 @@ export async function handleChallenge(interaction) {
         `Problem: ${challenge.problem}\n` +
         `${problemDetails}\n\n` +
         `${codeSubmissionInstruction(testSuite.functionName)}\n\n` +
-        `Submit with: /submit challenge_id:${challenge.id} answer:your fenced code block`);
+        "Post your fenced code block as a normal Discord message, then submit its message link or ID with: " +
+        `/submit challenge_id:${challenge.id} message:your-message-link-or-id`);
 }
 //# sourceMappingURL=challenge.js.map

@@ -6,7 +6,6 @@ import { handleChallengeInfo } from "./challengeInfo.js";
 import { handleEvaluate } from "./evaluate.js";
 import { handleLeaderboard } from "./leaderboard.js";
 import { handleSubmit } from "./submit.js";
-import { handleSubmitMessage } from "./submitMessage.js";
 
 export async function handleCommand(interaction: ChatInputCommandInteraction): Promise<void> {
   switch (interaction.commandName) {
@@ -20,10 +19,6 @@ export async function handleCommand(interaction: ChatInputCommandInteraction): P
 
     case "submit":
       await handleSubmit(interaction);
-      return;
-
-    case "submit-message":
-      await handleSubmitMessage(interaction);
       return;
 
     case "leaderboard":

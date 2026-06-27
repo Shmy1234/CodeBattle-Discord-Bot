@@ -8,6 +8,7 @@
     "dev": "tsx src/index.ts",
     "register": "tsx src/registerCommands.ts",
     "build:sandbox-template": "tsx e2b/build-template.ts",
+    "test": "tsx --test tests/**/*.test.ts",
     "build": "tsc",
     "start": "node dist/index.js"
   },

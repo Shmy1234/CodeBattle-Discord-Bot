@@ -27,14 +27,23 @@ winner one leaderboard point.
 
 ## Submission contract
 
-Send one code block tagged `js` or `ts`. The function name is specified when
-the bot creates the challenge. For example:
+Post one code block tagged `js` or `ts` as a normal Discord message. The
+function name is specified when the bot creates the challenge. For example:
 
 ```ts
 export function containsDuplicate(nums: number[]): boolean {
   return new Set(nums).size !== nums.length;
 }
 ```
+
+Then run `/submit` with the Challenge ID and either the message's ID (when it
+is in the current channel) or its full Discord message link. The bot only
+accepts a message written by the submitting Challenge participant, from the
+same Discord server, with no text outside its one fenced code block.
+
+Enable **Message Content Intent** in the Discord Developer Portal's Bot page.
+The bot also needs **View Channel** and **Read Message History** permission in
+every channel from which users can submit code.
 
 The bot currently provides executable public and hidden test suites for:
 

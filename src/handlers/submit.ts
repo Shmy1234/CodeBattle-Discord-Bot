@@ -1,8 +1,8 @@
-// Handles /submit for direct text/code answers entered into the slash command.
 import type { ChatInputCommandInteraction } from "discord.js";
 import { getChallenge } from "../db/challenges.js";
 import { addSubmission, hasUserSubmitted } from "../db/submissions.js";
 import { parseCodeSubmission } from "../evaluation/codeFence.js";
+import { parseDiscordMessageReference } from "../discord/messageReference.js";
 import { replyWithSubmissionResult } from "./submissionComparison.js";
 
 export async function handleSubmit(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -12,8 +12,7 @@ export async function handleSubmit(interaction: ChatInputCommandInteraction): Pr
   }
 
   const challengeId = interaction.options.getString("challenge_id", true).toUpperCase();
-  const answer = interaction.options.getString("answer", true);
-  const submission = parseCodeSubmission(answer);
+  const messageReferenceInput = interaction.options.getString("message", true);
   const challenge = await getChallenge(interaction.guildId, challengeId);
 
   if (!challenge) {
@@ -55,8 +54,48 @@ export async function handleSubmit(interaction: ChatInputCommandInteraction): Pr
     return;
   }
 
+  const reference = parseDiscordMessageReference(messageReferenceInput);
+
+  if (!reference) {
+    await interaction.reply("Provide a Discord message ID or a full Discord message link.");
+    return;
+  }
+
+  if (reference.guildId && reference.guildId !== interaction.guildId) {
+    await interaction.reply("That message link belongs to a different Discord server.");
+    return;
+  }
+
+  const channel = reference.channelId
+    ? await interaction.client.channels.fetch(reference.channelId).catch(() => null)
+    : interaction.channel;
+
+  if (!channel || !channel.isTextBased()) {
+    await interaction.reply("I could not access the text channel containing that message.");
+    return;
+  }
+
+  const message = await channel.messages.fetch(reference.messageId).catch(() => null);
+
+  if (!message) {
+    await interaction.reply("I could not find that message. Check the ID/link and the bot's channel permissions.");
+    return;
+  }
+
+  if (message.guildId !== interaction.guildId) {
+    await interaction.reply("That message does not belong to this Discord server.");
+    return;
+  }
+
+  if (message.author.id !== interaction.user.id) {
+    await interaction.reply("You can only submit a code message that you wrote.");
+    return;
+  }
+
+  const submission = parseCodeSubmission(message.content);
+
   if (!submission) {
-    await interaction.reply("Submit exactly one fenced `js` or `ts` code block. Unsupported languages and plain text are not accepted.");
+    await interaction.reply("That message must contain exactly one fenced `js` or `ts` code block and no other text.");
     return;
   }
 
@@ -65,7 +104,9 @@ export async function handleSubmit(interaction: ChatInputCommandInteraction): Pr
   await addSubmission(interaction.guildId, challenge, {
     userId: interaction.user.id,
     answer: submission.source,
-    language: submission.language
+    language: submission.language,
+    channelId: message.channelId,
+    messageId: message.id
   });
 
   await replyWithSubmissionResult(interaction, challenge);

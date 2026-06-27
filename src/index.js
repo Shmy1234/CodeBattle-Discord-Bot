@@ -3,7 +3,11 @@ import { Client, Events, GatewayIntentBits } from "discord.js";
 import { config } from "./config.js";
 import { handleCommand } from "./handlers/router.js";
 const client = new Client({
-    intents: [GatewayIntentBits.Guilds]
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent
+    ]
 });
 client.once(Events.ClientReady, (readyClient) => {
     console.log("Logged in as " + readyClient.user.tag);
